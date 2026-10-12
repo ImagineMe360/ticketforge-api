@@ -19,6 +19,7 @@ import userRoutes from './routes/users.routes'
 import httpLogger from './middleware/http-logger'
 import logger from './lib/logger'
 import eventRoutes from './routes/events.routes'
+import authRoutes from './routes/auth.routes'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const openApiPath = fs.existsSync(path.join(__dirname, 'docs/openapi.yaml'))
@@ -50,6 +51,7 @@ app.get('/', (_req, res) => {
 app.use('/health', healthRoutes)
 app.use('/api/v1/users', userRoutes)
 app.use('/api/v1/events', eventRoutes)
+app.use('/api/v1/auth', authRoutes)
 
 // error middleware
 app.use(NotFound)
