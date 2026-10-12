@@ -1,6 +1,5 @@
-import db from '../db/connect';
+import db from '../db/connect'
 
 export const getUsers = async () => {
-  const users = await db.user.findMany({});
-  return users;
-};
+  return db.user.findMany({ omit: { passwordHash: true } })
+}

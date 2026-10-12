@@ -12,10 +12,161 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  BUYER
+  ORGANIZER
+  ADMIN
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  EXPIRED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  INITIATED
+  SUCCEEDED
+  FAILED
+}
+
+enum TicketStatus {
+  VALID
+  USED
+  VOID
+}
 
 model User {
-  id          String   @id @default(uuid())
-  username    String   @unique
-  profilePic  String   @default("")
-  createdAt   DateTime @default(now())
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(BUYER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions Session[]
+  events   Event[]   @relation("OrganizerEvents")
+  orders   Order[]
+}
+
+model Session {
+  id               String    @id @default(uuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String    @unique
+  userAgent        String?
+  ipAddress        String?
+  lastActiveAt     DateTime  @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Event {
+  id          String      @id @default(uuid())
+  organizerId String
+  organizer   User        @relation("OrganizerEvents", fields: [organizerId], references: [id])
+  title       String
+  description String
+  venue       String
+  startsAt    DateTime
+  endsAt      DateTime?
+  status      EventStatus @default(DRAFT)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  tiers TicketTier[]
+
+  @@index([status, startsAt])
+  @@index([organizerId])
+}
+
+model TicketTier {
+  id        String   @id @default(uuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String
+  priceKobo Int
+  capacity  Int
+  createdAt DateTime @default(now())
+
+  orderItems OrderItem[]
+  tickets    Ticket[]
+
+  @@unique([eventId, name])
+}
+
+model Order {
+  id             String      @id @default(uuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  status         OrderStatus @default(PENDING)
+  totalKobo      Int
+  currency       String      @default("NGN")
+  expiresAt      DateTime
+  idempotencyKey String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  items    OrderItem[]
+  payments Payment[]
+  tickets  Ticket[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId])
+  @@index([status, expiresAt])
+}
+
+model OrderItem {
+  id            String     @id @default(uuid())
+  orderId       String
+  order         Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  tierId        String
+  tier          TicketTier @relation(fields: [tierId], references: [id])
+  quantity      Int
+  unitPriceKobo Int
+
+  @@index([orderId])
+  @@index([tierId])
+}
+
+model Payment {
+  id         String        @id @default(uuid())
+  orderId    String
+  order      Order         @relation(fields: [orderId], references: [id])
+  provider   String        @default("paystack")
+  reference  String        @unique
+  amountKobo Int
+  status     PaymentStatus @default(INITIATED)
+  rawPayload Json?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([orderId])
+}
+
+model Ticket {
+  id        String       @id @default(uuid())
+  orderId   String
+  order     Order        @relation(fields: [orderId], references: [id])
+  tierId    String
+  tier      TicketTier   @relation(fields: [tierId], references: [id])
+  code      String       @unique
+  status    TicketStatus @default(VALID)
+  usedAt    DateTime?
+  createdAt DateTime     @default(now())
+
+  @@index([orderId])
+  @@index([tierId, status])
 }
