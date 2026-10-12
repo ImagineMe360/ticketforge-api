@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
-  title: a-robust-backend-app API
-  description: API documentation for a-robust-backend-app
+  title: ticketforge-api API
+  description: API documentation for ticketforge-api
   version: 1.0.0
 servers:
   - url: /

@@ -1,5 +1,5 @@
 {
-  "name": "a-robust-backend-app",
+  "name": "ticketforge-api",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {

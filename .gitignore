@@ -13,3 +13,5 @@ lerna-debug.log*
 .claude/
 .windsurf/
 skills-lock.json
+
+src/generated
