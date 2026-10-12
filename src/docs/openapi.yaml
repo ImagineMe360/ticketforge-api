@@ -42,9 +42,11 @@ paths:
                       properties:
                         id:
                           type: string
-                        username:
+                        email:
                           type: string
-                        profilePic:
+                        name:
+                          type: string
+                        role:
                           type: string
                         createdAt:
                           type: string
