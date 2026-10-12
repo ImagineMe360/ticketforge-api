@@ -1,7 +1,7 @@
 {
   "name": "ticketforge-api",
   "version": "1.0.0",
-  "main": "server.js",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsup src/server.ts --format esm --out-dir dist",
