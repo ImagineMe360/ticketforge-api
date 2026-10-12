@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch --include \"src/docs/**/*.yaml\" src/server.ts",
     "build": "tsup src/server.ts --format esm --out-dir dist",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
@@ -13,7 +13,8 @@
     "docker:down": "docker compose down",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:seed": "prisma db seed"
   },
   "type": "module",
   "keywords": [],
@@ -27,41 +28,43 @@
     "schema": "src/prisma/schema.prisma"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "envalid": "^8.2.0",
     "express": "^4.19.2",
-    "cors": "^2.8.5",
-    "helmet": "^8.0.0",
-    "express-rate-limit": "^7.4.0",
-    "morgan": "^1.10.0",
     "express-async-errors": "^3.1.1",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^8.0.0",
     "http-status-codes": "^2.3.0",
+    "pg": "^8.23.0",
+    "pino": "^10.4.0",
+    "pino-http": "^11.0.0",
+    "rimraf": "^6.0.1",
     "swagger-ui-express": "^5.0.1",
     "yamljs": "^0.3.0",
-    "rimraf": "^6.0.1",
-    "@prisma/client": "^7.10.0",
-    "@prisma/adapter-pg": "^7.10.0",
-    "pg": "^8.23.0"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.11.0",
+    "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^22.5.4",
-    "@types/cors": "^2.8.17",
-    "@types/morgan": "^1.9.9",
+    "@types/pg": "^8.23.1",
+    "@types/supertest": "^6.0.2",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/yamljs": "^0.2.34",
     "eslint": "^9.11.0",
     "globals": "^15.9.0",
+    "pino-pretty": "^13.2.0",
+    "prisma": "^7.10.0",
+    "supertest": "^7.0.0",
+    "ts-node": "^10.9.2",
     "tsup": "^8.2.4",
     "tsx": "^4.19.0",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.7.0",
-    "@types/supertest": "^6.0.2",
-    "supertest": "^7.0.0",
-    "vitest": "^2.1.1",
-    "prisma": "^7.10.0",
-    "ts-node": "^10.9.2",
-    "@types/pg": "^8.23.1"
+    "vitest": "^2.1.1"
   }
 }
