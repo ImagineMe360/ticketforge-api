@@ -579,6 +579,179 @@ paths:
                     example: Something went wrong
                   requestId:
                     type: string
+  /api/v1/auth/sessions:
+    get:
+      summary: List active sessions
+      description: Lists all active and unexpired sessions for the authenticated user, indicating which session is the current one.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of active sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        userAgent:
+                          type: string
+                          nullable: true
+                        ipAddress:
+                          type: string
+                          nullable: true
+                        createdAt:
+                          type: string
+                          format: date-time
+                        lastActiveAt:
+                          type: string
+                          format: date-time
+                        current:
+                          type: boolean
+        '401':
+          description: Unauthorized (missing, invalid, or expired access token, or inactive session)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Authentication required
+                  requestId:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Something went wrong
+                  requestId:
+                    type: string
+  /api/v1/auth/sessions/{id}:
+    delete:
+      summary: Revoke a specific session
+      description: Revokes a specific session belonging to the authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the session to revoke
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Session revoked successfully
+        '400':
+          description: Validation error (invalid UUID format)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Validation failed
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        path:
+                          type: string
+                        message:
+                          type: string
+                  requestId:
+                    type: string
+        '401':
+          description: Unauthorized (missing, invalid, or expired access token, or inactive session)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Authentication required
+                  requestId:
+                    type: string
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Session not found
+                  requestId:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Something went wrong
+                  requestId:
+                    type: string
+  /api/v1/auth/logout-all:
+    post:
+      summary: Log out from all sessions
+      description: Revokes all active sessions for the authenticated user and clears the current refresh token cookie.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: All sessions revoked and cookie cleared
+          headers:
+            Set-Cookie:
+              description: Clears the `refresh_token` cookie
+              schema:
+                type: string
+                example: refresh_token=; Path=/api/v1/auth; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax
+        '401':
+          description: Unauthorized (missing, invalid, or expired access token, or inactive session)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Authentication required
+                  requestId:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Something went wrong
+                  requestId:
+                    type: string
 components:
   securitySchemes:
     bearerAuth:

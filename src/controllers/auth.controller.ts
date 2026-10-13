@@ -1,7 +1,11 @@
 import { Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import * as authService from '../services/auth.service'
-import { loginBody, registerBody } from '../schemas/auth.schema'
+import {
+  loginBody,
+  registerBody,
+  sessionIdParams,
+} from '../schemas/auth.schema'
 import {
   clearRefreshCookieOptions,
   REFRESH_COOKIE,
@@ -65,4 +69,24 @@ export const logout = async (req: Request, res: Response) => {
 export const me = async (req: Request, res: Response) => {
   const user = await authService.getCurrentUser(req.auth!.userId)
   res.status(StatusCodes.OK).json({ user })
+}
+
+export const listSessions = async (req: Request, res: Response) => {
+  const sessions = await authService.listSessions(
+    req.auth!.userId,
+    req.auth!.sessionId,
+  )
+  res.status(StatusCodes.OK).json({ sessions })
+}
+
+export const revokeSession = async (req: Request, res: Response) => {
+  const { id } = sessionIdParams.parse(req.params)
+  await authService.revokeSession(req.auth!.userId, id)
+  res.status(StatusCodes.NO_CONTENT).send()
+}
+
+export const logoutAll = async (req: Request, res: Response) => {
+  await authService.revokeAllSessions(req.auth!.userId)
+  res.clearCookie(REFRESH_COOKIE, clearRefreshCookieOptions)
+  res.status(StatusCodes.NO_CONTENT).send()
 }

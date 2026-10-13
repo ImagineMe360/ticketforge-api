@@ -1,6 +1,7 @@
 import config from '../config'
 import db from '../db/connect'
 import ConflictError from '../errors/conflict-error'
+import NotFoundError from '../errors/not-found-error'
 import UnauthenticatedError from '../errors/unauthenticated-error'
 import logger from '../lib/logger'
 import { hashPassword, verifyPassword } from '../lib/password'
@@ -147,3 +148,41 @@ export const getCurrentUser = async (userId: string) => {
   if (!user) throw new UnauthenticatedError('Authentication required')
   return user
 }
+
+export const listSessions = async (
+  userId: string,
+  currentSessionId: string,
+) => {
+  const sessions = await db.session.findMany({
+    where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
+    orderBy: { lastActiveAt: 'desc' },
+    // Explicit allowlist: refresh token hashes must never leave the server.
+    select: {
+      id: true,
+      userAgent: true,
+      ipAddress: true,
+      createdAt: true,
+      lastActiveAt: true,
+    },
+  })
+  return sessions.map((s) => ({ ...s, current: s.id === currentSessionId }))
+}
+
+export const revokeSession = async (userId: string, sessionId: string) => {
+  // Scoping by userId means you can only ever see your own sessions.
+  const session = await db.session.findFirst({
+    where: { id: sessionId, userId },
+  })
+  if (!session) throw new NotFoundError('Session not found')
+
+  await db.session.updateMany({
+    where: { id: sessionId, revokedAt: null },
+    data: { revokedAt: new Date() },
+  })
+}
+
+export const revokeAllSessions = (userId: string) =>
+  db.session.updateMany({
+    where: { userId, revokedAt: null },
+    data: { revokedAt: new Date() },
+  })
