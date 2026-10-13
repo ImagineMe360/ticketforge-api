@@ -1,6 +1,7 @@
 import { pinoHttp } from 'pino-http'
 import logger from '../lib/logger'
 import { randomUUID } from 'node:crypto'
+import type { Request } from 'express'
 
 const httpLogger = pinoHttp({
   logger,
@@ -24,6 +25,10 @@ const httpLogger = pinoHttp({
   },
   customSuccessMessage: (req, res) =>
     `${req.method} ${req.url} ${res.statusCode}`,
+  customProps: (req: Request) => ({
+    userId: req.auth?.userId,
+    sessionId: req.auth?.sessionId,
+  }),
 })
 
 export default httpLogger

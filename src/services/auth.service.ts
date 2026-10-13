@@ -2,6 +2,7 @@ import config from '../config'
 import db from '../db/connect'
 import ConflictError from '../errors/conflict-error'
 import UnauthenticatedError from '../errors/unauthenticated-error'
+import logger from '../lib/logger'
 import { hashPassword, verifyPassword } from '../lib/password'
 import {
   generateRefreshToken,
@@ -71,4 +72,78 @@ export const loginUser = async (input: LoginInput, meta: LoginMeta) => {
 
   const { passwordHash: _passwordHash, ...safeUser } = user
   return { user: safeUser, accessToken, refreshToken, refreshExpiresAt }
+}
+
+export const rotateRefreshToken = async (presented: string) => {
+  const presentedHash = hashRefreshToken(presented)
+
+  const session = await db.session.findUnique({
+    where: { refreshTokenHash: presentedHash },
+    include: { user: true },
+  })
+
+  if (!session) {
+    // Not current. Is it an already-rotated token being replayed?
+    const reused = await db.session.findUnique({
+      where: { previousRefreshTokenHash: presentedHash },
+    })
+    if (reused && !reused.revokedAt) {
+      await db.session.update({
+        where: { id: reused.id },
+        data: { revokedAt: new Date() },
+      })
+      logger.warn(
+        { sessionId: reused.id, userId: reused.userId },
+        'Refresh token reuse detected; session revoked',
+      )
+    }
+    throw new UnauthenticatedError('Invalid refresh token')
+  }
+
+  if (session.revokedAt || session.expiresAt <= new Date()) {
+    throw new UnauthenticatedError('Invalid refresh token')
+  }
+
+  const newRefreshToken = generateRefreshToken()
+
+  // Compare-and-swap: only one of any concurrent requests can win.
+  const swapped = await db.session.updateMany({
+    where: { id: session.id, refreshTokenHash: presentedHash, revokedAt: null },
+    data: {
+      refreshTokenHash: hashRefreshToken(newRefreshToken),
+      previousRefreshTokenHash: presentedHash,
+      lastActiveAt: new Date(),
+    },
+  })
+  if (swapped.count !== 1)
+    throw new UnauthenticatedError('Invalid refresh token')
+
+  const accessToken = await signAccessToken({
+    sub: session.userId,
+    role: session.user.role, // role is re-read from the database on every refresh
+    sid: session.id,
+  })
+
+  return {
+    accessToken,
+    refreshToken: newRefreshToken,
+    refreshExpiresAt: session.expiresAt, // absolute 30-day lifetime from login
+  }
+}
+
+export const revokeByRefreshToken = async (token: string) => {
+  // updateMany makes this idempotent: logging out twice is harmless.
+  await db.session.updateMany({
+    where: { refreshTokenHash: hashRefreshToken(token), revokedAt: null },
+    data: { revokedAt: new Date() },
+  })
+}
+
+export const getCurrentUser = async (userId: string) => {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    omit: { passwordHash: true },
+  })
+  if (!user) throw new UnauthenticatedError('Authentication required')
+  return user
 }

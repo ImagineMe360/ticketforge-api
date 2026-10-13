@@ -59,16 +59,17 @@ model User {
 }
 
 model Session {
-  id               String    @id @default(uuid())
-  userId           String
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  refreshTokenHash String    @unique
-  userAgent        String?
-  ipAddress        String?
-  lastActiveAt     DateTime  @default(now())
-  expiresAt        DateTime
-  revokedAt        DateTime?
-  createdAt        DateTime  @default(now())
+  id                       String    @id @default(uuid())
+  userId                   String
+  user                     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash         String    @unique
+  previousRefreshTokenHash String?   @unique
+  userAgent                String?
+  ipAddress                String?
+  lastActiveAt             DateTime  @default(now())
+  expiresAt                DateTime
+  revokedAt                DateTime?
+  createdAt                DateTime  @default(now())
 
   @@index([userId])
 }
