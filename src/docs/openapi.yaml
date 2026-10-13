@@ -290,3 +290,112 @@ paths:
                     example: Something went wrong
                   requestId:
                     type: string
+  /api/v1/auth/login:
+    post:
+      summary: Log in an existing user
+      description: Authenticates a user with email and password, creates a session, sets an HTTP-only refresh token cookie, and returns a short-lived access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 254
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 1
+                  maxLength: 128
+                  example: P@ssw0rd123
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            Set-Cookie:
+              description: Sets an HTTP-only cookie with the refresh token (`refresh_token`)
+              schema:
+                type: string
+                example: refresh_token=...; Path=/api/v1/auth; HttpOnly; SameSite=Lax
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      email:
+                        type: string
+                        format: email
+                      name:
+                        type: string
+                      role:
+                        type: string
+                        enum: [BUYER, ORGANIZER, ADMIN]
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+                  accessToken:
+                    type: string
+                    example: eyJhbGciOi...
+                  expiresIn:
+                    type: integer
+                    example: 900
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Validation failed
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        path:
+                          type: string
+                        message:
+                          type: string
+                  requestId:
+                    type: string
+        '401':
+          description: Authentication failed (invalid credentials)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid email or password
+                  requestId:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Something went wrong
+                  requestId:
+                    type: string
