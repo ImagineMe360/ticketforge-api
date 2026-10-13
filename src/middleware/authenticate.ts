@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from 'express'
 import UnauthenticatedError from '../errors/unauthenticated-error'
 import { verifyAccessToken } from '../lib/tokens'
 import db from '../db/connect'
-import { Role } from '../generated/prisma/enums'
 
 const TOUCH_INTERVAL_MS = 60_000
 
@@ -23,7 +22,10 @@ const authenticate = async (
     throw new UnauthenticatedError('Invalid or expired token')
   }
 
-  const session = await db.session.findUnique({ where: { id: payload.sid } })
+  const session = await db.session.findUnique({
+    where: { id: payload.sid },
+    include: { user: { select: { role: true } } },
+  })
   if (
     !session ||
     session.userId !== payload.sub ||
@@ -43,7 +45,7 @@ const authenticate = async (
 
   req.auth = {
     userId: payload.sub,
-    role: payload.role as Role,
+    role: session.user.role,
     sessionId: session.id,
   }
   next()

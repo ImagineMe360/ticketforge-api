@@ -14,3 +14,5 @@ export const loginBody = z.object({
 })
 
 export type LoginInput = z.infer<typeof loginBody>
+
+export const sessionIdParams = z.object({ id: z.uuid() })
