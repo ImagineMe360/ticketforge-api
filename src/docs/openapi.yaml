@@ -28,35 +28,71 @@ paths:
   /api/v1/users:
     get:
       summary: Get all users
-      description: Returns a list of users.
+      description: Returns a list of all users. Requires an authenticated user with the ADMIN role.
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: A list of users
           content:
             application/json:
               schema:
-                oneOf:
-                  - type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                        email:
-                          type: string
-                        name:
-                          type: string
-                        role:
-                          type: string
-                        createdAt:
-                          type: string
-                          format: date-time
-                  - type: object
-                    properties:
-                      users:
-                        type: array
-                        items:
-                          type: object
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+                    name:
+                      type: string
+                    role:
+                      type: string
+                      enum: [BUYER, ORGANIZER, ADMIN]
+                    createdAt:
+                      type: string
+                      format: date-time
+                    updatedAt:
+                      type: string
+                      format: date-time
+        '401':
+          description: Unauthorized (missing, invalid, or expired access token)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Authentication required
+                  requestId:
+                    type: string
+        '403':
+          description: Forbidden (insufficient permissions, ADMIN role required)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You do not have permission to perform this action
+                  requestId:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Something went wrong
+                  requestId:
+                    type: string
   /api/v1/events:
     get:
       summary: Get all events
@@ -399,3 +435,157 @@ paths:
                     example: Something went wrong
                   requestId:
                     type: string
+  /api/v1/auth/refresh:
+    post:
+      summary: Refresh access token
+      description: Rotates the refresh token provided via HTTP-only cookie and issues a new access token. Detects token reuse and revokes the session if reuse is detected.
+      parameters:
+        - name: refresh_token
+          in: cookie
+          required: true
+          description: Current refresh token stored in an HTTP-only cookie
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Token refreshed successfully
+          headers:
+            Set-Cookie:
+              description: Sets an HTTP-only cookie with the new rotated refresh token (`refresh_token`)
+              schema:
+                type: string
+                example: refresh_token=...; Path=/api/v1/auth; HttpOnly; SameSite=Lax
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                    example: eyJhbGciOi...
+                  expiresIn:
+                    type: integer
+                    example: 900
+        '401':
+          description: Unauthorized (refresh token missing, invalid, expired, revoked, or reused)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid refresh token
+                  requestId:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Something went wrong
+                  requestId:
+                    type: string
+  /api/v1/auth/logout:
+    post:
+      summary: Log out user
+      description: Revokes the active session associated with the refresh token cookie and clears the cookie.
+      parameters:
+        - name: refresh_token
+          in: cookie
+          required: false
+          description: Refresh token cookie to revoke
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Logged out successfully (session revoked and cookie cleared)
+          headers:
+            Set-Cookie:
+              description: Clears the `refresh_token` cookie
+              schema:
+                type: string
+                example: refresh_token=; Path=/api/v1/auth; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Something went wrong
+                  requestId:
+                    type: string
+  /api/v1/auth/me:
+    get:
+      summary: Get current authenticated user
+      description: Returns the profile of the currently logged-in user based on the Bearer access token.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      email:
+                        type: string
+                        format: email
+                      name:
+                        type: string
+                      role:
+                        type: string
+                        enum: [BUYER, ORGANIZER, ADMIN]
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+        '401':
+          description: Unauthorized (missing, invalid, or expired access token, or inactive session)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Authentication required
+                  requestId:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Something went wrong
+                  requestId:
+                    type: string
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: refresh_token

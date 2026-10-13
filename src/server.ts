@@ -4,9 +4,7 @@ import 'express-async-errors'
 import cors from 'cors'
 import config from './config/index'
 import securityMiddleware from './middleware/security'
-
 import db from './db/connect'
-
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -20,6 +18,7 @@ import httpLogger from './middleware/http-logger'
 import logger from './lib/logger'
 import eventRoutes from './routes/events.routes'
 import authRoutes from './routes/auth.routes'
+import cookieParser from 'cookie-parser'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const openApiPath = fs.existsSync(path.join(__dirname, 'docs/openapi.yaml'))
@@ -39,6 +38,7 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.use(httpLogger)
 app.use(express.json())
+app.use(cookieParser())
 
 // swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
