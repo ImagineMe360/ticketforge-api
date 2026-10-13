@@ -7,3 +7,10 @@ export const registerBody = z.object({
 })
 
 export type RegisterInput = z.infer<typeof registerBody>
+
+export const loginBody = z.object({
+  email: z.email().toLowerCase().max(254),
+  password: z.string().min(1).max(128),
+})
+
+export type LoginInput = z.infer<typeof loginBody>

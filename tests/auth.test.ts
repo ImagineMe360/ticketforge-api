@@ -19,3 +19,10 @@ describe('POST /api/v1/auth/register validation', () => {
     expect(res.body.errors[0].path).toBe('email')
   })
 })
+
+describe('POST /api/v1/auth/login validation', () => {
+  it('rejects an empty body', async () => {
+    const res = await request(app).post('/api/v1/auth/login').send({})
+    expect(res.status).toBe(400)
+  })
+})
