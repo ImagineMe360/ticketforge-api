@@ -29,6 +29,10 @@ const env = cleanEnv(process.env, {
     default: isProd,
     desc: 'Send cookies over HTTPS only',
   }),
+  TRUST_PROXY: num({
+    default: 0,
+    desc: 'Number of reverse proxies in front of the app',
+  }),
 })
 
 export const config = {
@@ -41,6 +45,7 @@ export const config = {
   accessTokenTtlSeconds: env.ACCESS_TOKEN_TTL_SECONDS,
   refreshTokenTtlDays: env.REFRESH_TOKEN_TTL_DAYS,
   cookieSecure: env.COOKIE_SECURE,
+  trustProxy: env.TRUST_PROXY,
 }
 
 export default config
