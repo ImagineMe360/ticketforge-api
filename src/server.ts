@@ -19,6 +19,7 @@ import logger from './lib/logger'
 import eventRoutes from './routes/events.routes'
 import authRoutes from './routes/auth.routes'
 import cookieParser from 'cookie-parser'
+import os from 'node:os'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const openApiPath = fs.existsSync(path.join(__dirname, 'docs/openapi.yaml'))
@@ -27,6 +28,12 @@ const openApiPath = fs.existsSync(path.join(__dirname, 'docs/openapi.yaml'))
 const swaggerDocument = YAML.load(openApiPath)
 
 const app = express()
+
+app.set('trust proxy', config.trustProxy)
+app.use((_req, res, next) => {
+  res.setHeader('x-served-by', os.hostname())
+  next()
+})
 
 securityMiddleware(app)
 const corsOptions = {
