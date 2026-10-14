@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down",
+    "docker:app": "docker compose --profile app up --build",
+    "docker:down": "docker compose --profile app down",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
@@ -27,6 +28,7 @@
   "prisma": {
     "schema": "src/prisma/schema.prisma"
   },
+  "packageManager": "pnpm@11.18.0",
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",

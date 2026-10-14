@@ -1,9 +1,11 @@
 import dotenv from 'dotenv'
-import { cleanEnv, makeExactValidator, num, port, str } from 'envalid'
+import { bool, cleanEnv, makeValidator, num, port, str } from 'envalid'
 
 dotenv.config()
 
-const secret = makeExactValidator<string>((v) => {
+const isProd = process.env.NODE_ENV === 'production'
+
+const secret = makeValidator<string>((v) => {
   if (v.length < 32) throw new Error('Must be at least 32 characters')
   return v
 })
@@ -23,6 +25,10 @@ const env = cleanEnv(process.env, {
   JWT_ACCESS_SECRET: secret({ desc: 'secret used to sign access token' }),
   ACCESS_TOKEN_TTL_SECONDS: num({ default: 900 }),
   REFRESH_TOKEN_TTL_DAYS: num({ default: 30 }),
+  COOKIE_SECURE: bool({
+    default: isProd,
+    desc: 'Send cookies over HTTPS only',
+  }),
 })
 
 export const config = {
@@ -34,6 +40,7 @@ export const config = {
   jwtAccessSecret: env.JWT_ACCESS_SECRET,
   accessTokenTtlSeconds: env.ACCESS_TOKEN_TTL_SECONDS,
   refreshTokenTtlDays: env.REFRESH_TOKEN_TTL_DAYS,
+  cookieSecure: env.COOKIE_SECURE,
 }
 
 export default config

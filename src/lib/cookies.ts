@@ -6,7 +6,7 @@ export const REFRESH_COOKIE = 'refresh_token'
 // clearCookie only works if path and attributes match how it was set.
 export const clearRefreshCookieOptions: CookieOptions = {
   httpOnly: true,
-  secure: config.nodeEnv === 'production',
+  secure: config.cookieSecure,
   sameSite: 'lax',
   path: '/api/v1/auth',
 }
