@@ -114,14 +114,16 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - type: array
+                type: object
+                properties:
+                  items:
+                    type: array
                     items:
                       type: object
                       properties:
                         id:
                           type: string
-                        organizationId:
+                        organizerId:
                           type: string
                         title:
                           type: string
@@ -154,9 +156,13 @@ paths:
                               name:
                                 type: string
                               priceKobo:
-                                type: int
+                                type: integer
                               capacity:
-                                type: int
+                                type: integer
+                  page: { type: integer }
+                  limit: { type: integer }
+                  total: { type: integer }
+                  totalPages: { type: integer }
         '400':
           description: Bad request
           content:

@@ -9,7 +9,7 @@ export const listPublishedEvents = async (page: number, limit: number) => {
   const [items, total] = await db.$transaction([
     db.event.findMany({
       where,
-      orderBy: { startsAt: 'desc' },
+      orderBy: { startsAt: 'asc' },
       skip: (page - 1) * limit,
       take: limit,
       include: { tiers: { select: tierSelect } },

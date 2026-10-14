@@ -8,7 +8,9 @@ WORKDIR /app
 # ---------- build: all dependencies, compile the app ----------
 FROM base AS build
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    --mount=type=cache,id=pnpm-meta,target=/root/.cache/pnpm \
+    pnpm install --frozen-lockfile --fetch-timeout=600000 --fetch-retries=5
 COPY . .
 # prisma.config.ts insists DATABASE_URL exists, but generate never connects to it.
 RUN DATABASE_URL="postgresql://build:build@localhost:5432/build" pnpm prisma generate
@@ -18,7 +20,9 @@ RUN pnpm build \
 # ---------- prod-deps: runtime dependencies only ----------
 FROM base AS prod-deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
-RUN pnpm install --prod --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    --mount=type=cache,id=pnpm-meta,target=/root/.cache/pnpm \
+    pnpm install --prod --frozen-lockfile --fetch-timeout=600000 --fetch-retries=5
 
 # ---------- runtime: the image we actually ship ----------
 FROM node:22-slim AS runtime
