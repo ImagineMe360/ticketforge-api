@@ -25,6 +25,51 @@ paths:
                   uptime:
                     type: number
                     example: 12.34
+  /health/ready:
+    get:
+      summary: Readiness check endpoint
+      description: Checks whether the service can reach its database and Redis dependencies.
+      responses:
+        '200':
+          description: The service is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ready]
+                    example: ready
+                  checks:
+                    type: object
+                    properties:
+                      database:
+                        type: boolean
+                        example: true
+                      redis:
+                        type: boolean
+                        example: true
+        '503':
+          description: The service is degraded because a dependency check failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [degraded]
+                    example: degraded
+                  checks:
+                    type: object
+                    properties:
+                      database:
+                        type: boolean
+                        example: false
+                      redis:
+                        type: boolean
+                        example: true
   /api/v1/users:
     get:
       summary: Get all users
@@ -226,9 +271,9 @@ paths:
                         name:
                           type: string
                         priceKobo:
-                          type: int
+                          type: integer
                         capacity:
-                          type: int
+                          type: integer
   /api/v1/auth/register:
     post:
       summary: Register a new user
