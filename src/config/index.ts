@@ -33,6 +33,18 @@ const env = cleanEnv(process.env, {
     default: 0,
     desc: 'Number of reverse proxies in front of the app',
   }),
+  REDIS_URL: str({
+    default: 'redis://localhost:6379',
+    desc: 'Redis connection URL',
+  }),
+  RATE_LIMIT_MAX: num({
+    default: 100,
+    desc: 'Global requests per 15 min per IP',
+  }),
+  LOGIN_RATE_LIMIT_MAX: num({
+    default: 10,
+    desc: 'Failed logins per 15 min per IP',
+  }),
 })
 
 export const config = {
@@ -46,6 +58,9 @@ export const config = {
   refreshTokenTtlDays: env.REFRESH_TOKEN_TTL_DAYS,
   cookieSecure: env.COOKIE_SECURE,
   trustProxy: env.TRUST_PROXY,
+  redisUrl: env.REDIS_URL,
+  rateLimitMax: env.RATE_LIMIT_MAX,
+  loginRateLimitMax: env.LOGIN_RATE_LIMIT_MAX,
 }
 
 export default config

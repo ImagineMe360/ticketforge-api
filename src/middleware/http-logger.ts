@@ -12,7 +12,7 @@ const httpLogger = pinoHttp({
     res.setHeader('x-request-id', id)
     return id
   },
-  autoLogging: { ignore: (req) => req.url === '/health' },
+  autoLogging: { ignore: (req) => req.url?.startsWith('/health') ?? false },
   // Allowlist: log only these fields, nothing else.
   serializers: {
     req: (req) => ({ id: req.id, method: req.method, url: req.url }),

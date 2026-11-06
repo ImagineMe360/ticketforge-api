@@ -20,6 +20,7 @@ import eventRoutes from './routes/events.routes'
 import authRoutes from './routes/auth.routes'
 import cookieParser from 'cookie-parser'
 import os from 'node:os'
+import redis from './lib/redis'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const openApiPath = fs.existsSync(path.join(__dirname, 'docs/openapi.yaml'))
@@ -82,6 +83,13 @@ if (process.env.NODE_ENV !== 'test') {
         logger.info('Prisma client disconnected.')
       } catch {
         logger.error('Error disconnecting Prisma client:')
+      }
+
+      try {
+        await redis.quit()
+        logger.info('Redis disconnected.')
+      } catch {
+        logger.error('Error disconnecting Redis')
       }
 
       process.exit(0)
