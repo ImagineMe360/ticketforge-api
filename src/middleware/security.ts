@@ -1,17 +1,17 @@
-import { Application } from 'express';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import { Application } from 'express'
+import helmet from 'helmet'
+import { createLimiter } from './rate-limit'
+import config from '../config'
 
 const securityMiddleware = (app: Application): void => {
-  app.use(helmet());
+  app.use(helmet())
   app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 100,
-      standardHeaders: true,
-      legacyHeaders: false,
-    })
-  );
-};
+    createLimiter({
+      prefix: 'global',
+      windowMs: 15 * 60 * 100,
+      limit: config.rateLimitMax,
+    }),
+  )
+}
 
-export default securityMiddleware;
+export default securityMiddleware

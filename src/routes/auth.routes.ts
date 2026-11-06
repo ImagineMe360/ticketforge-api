@@ -10,11 +10,20 @@ import {
   revokeSession,
 } from '../controllers/auth.controller'
 import authenticate from '../middleware/authenticate'
+import { createLimiter } from '../middleware/rate-limit'
+import config from '../config'
 
 const authRoutes = express.Router()
 
+const loginLimiter = createLimiter({
+  prefix: 'login',
+  windowMs: 15 * 50 * 1000,
+  limit: config.loginRateLimitMax,
+  skipSuccessfulRequests: true,
+})
+
 authRoutes.post('/register', register)
-authRoutes.post('/login', login)
+authRoutes.post('/login', loginLimiter, login)
 authRoutes.post('/refresh', refresh)
 authRoutes.post('/logout', logout)
 authRoutes.get('/me', authenticate, me)
